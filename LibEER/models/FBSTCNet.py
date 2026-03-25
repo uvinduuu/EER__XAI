@@ -22,10 +22,40 @@ from braindecode.util import set_random_seeds
 from sklearn.metrics import confusion_matrix
 
 from braindecode.util import np_to_th
-from braindecode.models.modules import Expression, Ensure4d
-from braindecode.models.functions import (
-    safe_log, square, transpose_time_to_spat
-)
+
+# Local implementations of deprecated braindecode utilities
+class Expression(nn.Module):
+    """Wraps a function as a module."""
+    def __init__(self, expression):
+        super().__init__()
+        self.expression = expression
+
+    def forward(self, *args):
+        return self.expression(*args)
+
+
+class Ensure4d(nn.Module):
+    """Ensures input tensor is 4-dimensional."""
+    def forward(self, x):
+        while len(x.shape) < 4:
+            x = x.unsqueeze(-1)
+        return x
+
+
+def safe_log(x, eps=1e-6):
+    """Safe logarithm that avoids log(0)."""
+    return torch.log(torch.clamp(x, min=eps))
+
+
+def square(x):
+    """Element-wise square."""
+    return x * x
+
+
+def transpose_time_to_spat(x):
+    """Transpose time and spatial dimensions."""
+    return x.transpose(1, 3)
+
 
 def get_padding(kernel_size, stride=1, dilation=1, **_):
     if isinstance(kernel_size, tuple):
