@@ -113,7 +113,8 @@ def get_split_index(data, label, setting=None):
             train_num = total_length - test_num - val_num
             tts['test'][0].extend(indexes[:test_num])
             tts['val'][0].extend(indexes[test_num:test_num + val_num])
-            tts['train'][0].extend(indexes[test_num + val_num:])    elif setting.split_type == "train-val-test-subject-wise":
+            tts['train'][0].extend(indexes[test_num + val_num:])
+    elif setting.split_type == "train-val-test-subject-wise":
         # Split subjects (not samples) into train/val/test: 70/15/15
         # All samples from a subject stay together in the same split
         num_subjects = len(data) if hasattr(data, '__len__') else 1
