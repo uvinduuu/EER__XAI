@@ -113,8 +113,26 @@ def get_split_index(data, label, setting=None):
             train_num = total_length - test_num - val_num
             tts['test'][0].extend(indexes[:test_num])
             tts['val'][0].extend(indexes[test_num:test_num + val_num])
-            tts['train'][0].extend(indexes[test_num + val_num:])
-    else:
+            tts['train'][0].extend(indexes[test_num + val_num:])    elif setting.split_type == "train-val-test-subject-wise":
+        # Split subjects (not samples) into train/val/test: 70/15/15
+        # All samples from a subject stay together in the same split
+        num_subjects = len(data) if hasattr(data, '__len__') else 1
+        subject_indices = list(range(num_subjects))
+        random.shuffle(subject_indices)
+        
+        train_num = int(0.70 * num_subjects)
+        val_num = int(0.15 * num_subjects)
+        
+        train_subjects = subject_indices[:train_num]
+        val_subjects = subject_indices[train_num:train_num + val_num]
+        test_subjects = subject_indices[train_num + val_num:]
+        
+        tts['train'] = [train_subjects]
+        tts['val'] = [val_subjects]
+        tts['test'] = [test_subjects]
+        
+        print(f"[Subject-wise Split] Train: {len(train_subjects)} subjects, "
+              f"Val: {len(val_subjects)} subjects, Test: {len(test_subjects)} subjects")    else:
         print("wrong split type, please check out")
         exit(1)
     assert setting.sr is None or (max(setting.sr)<=len(label) and min(setting.sr) > 0), \
