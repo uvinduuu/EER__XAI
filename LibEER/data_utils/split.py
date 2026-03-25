@@ -133,7 +133,8 @@ def get_split_index(data, label, setting=None):
         tts['test'] = [test_subjects]
         
         print(f"[Subject-wise Split] Train: {len(train_subjects)} subjects, "
-              f"Val: {len(val_subjects)} subjects, Test: {len(test_subjects)} subjects")    else:
+              f"Val: {len(val_subjects)} subjects, Test: {len(test_subjects)} subjects")
+    else:
         print("wrong split type, please check out")
         exit(1)
     assert setting.sr is None or (max(setting.sr)<=len(label) and min(setting.sr) > 0), \
