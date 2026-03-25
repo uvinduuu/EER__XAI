@@ -58,7 +58,7 @@ def get_args_parser():
     parser.add_argument('-cross_trail', default='true', type=str, help="whether use cross-trail setting")
     parser.add_argument('-experiment_mode', default='subject-dependent', type=str,
                         help='which experiment mode be selected')
-    parser.add_argument('-split_type', default='front-back', type=str, choices=['kfold', 'leave-one-out', 'front-back', 'train-val-test'],
+    parser.add_argument('-split_type', default='front-back', type=str, choices=['kfold', 'leave-one-out', 'front-back', 'train-val-test', 'train-val-test-subject-wise'],
                         help="choose which method to split dataset")
     parser.add_argument('-fold_num', default=5, type=int, help='the number of folds')
     parser.add_argument('-fold_shuffle', default='true', type=str, help='whether shuffle when using k-fold split')
