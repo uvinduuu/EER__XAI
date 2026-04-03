@@ -93,7 +93,7 @@ class HSLT(nn.Module):
         if self.classes == 2:
             self.activation = nn.Sigmoid()
         else:
-            self.activation = nn.Softmax(dim=1)
+            self.activation = nn.Identity()
     def transfer(self, data):
         new_indices = []
         regions = {}
@@ -110,7 +110,6 @@ class HSLT(nn.Module):
         return data
     def forward(self, inputs):
         inputs = self.transfer(inputs)
-
         transformer_outputs = []
         curr = 0
         for i in range(0, self.regions_num):
