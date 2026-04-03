@@ -1,0 +1,14 @@
+{
+  "model": "dgcnn",
+  "checkpoint": "/kaggle/working/results/DGCNN/seediv_sub_wise_setting/checkpoint-bestmacro-f1",
+  "seed": 2024,
+  "test_acc": 0.24550898203592814,
+  "n_explained": 300,
+  "n_bg": 100,
+  "device": "cuda",
+  "shap_shape": [
+    300,
+    62,
+    5
+  ]
+}

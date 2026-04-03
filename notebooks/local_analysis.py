@@ -91,38 +91,58 @@ BRAIN_REGIONS = {
 # ============================================================================
 
 def load_results(results_dir: str):
-    """Load all saved XAI results from the Kaggle output directory."""
+    """
+    Load XAI results from the Kaggle output directory.
+
+    Actual structure produced by run_shap.py:
+      <results_dir>/
+        checkpoints/<model>/checkpoint-bestmacro-f1
+        xai_results/<model>/{shap_values,electrode_importance,emotion_importance}.npy
+        xai_results/<model>/shap_summary.json
+        xai_results/data/test_data_<model>.pkl
+    """
     rd = Path(results_dir)
+    xai_root = rd / "xai_results"
 
-    with open(rd / "data" / "test_data_de.pkl",  "rb") as f:
-        de_data  = pickle.load(f)
-    with open(rd / "data" / "test_data_raw.pkl", "rb") as f:
-        raw_data = pickle.load(f)
+    # Per-model test data and XAI arrays
+    test_data = {}   # model_name -> {"X": ..., "y": ...}
+    xai       = {}   # model_name -> {shap_values, electrode_importance, emotion_importance, test_acc}
+    summaries = {}   # model_name -> shap_summary dict
 
-    with open(rd / "metrics" / "model_accuracy.json") as f:
-        accuracy = json.load(f)
-    with open(rd / "metrics" / "model_ranking.json") as f:
-        ranking  = json.load(f)
-
-    xai = {}
     for model_name in ALL_MODELS:
-        xai_dir = rd / "xai" / model_name
+        xai_dir = xai_root / model_name
         if not xai_dir.exists():
             print(f"  WARNING: no XAI data found for {model_name}, skipping.")
             continue
+
+        # Load arrays
         xai[model_name] = {
             "shap_values":          np.load(xai_dir / "shap_values.npy"),
             "electrode_importance": np.load(xai_dir / "electrode_importance.npy"),
             "emotion_importance":   np.load(xai_dir / "emotion_importance.npy"),
         }
 
-    return de_data, raw_data, xai, accuracy, ranking
+        # Load summary (contains test_acc)
+        summary_path = xai_dir / "shap_summary.json"
+        if summary_path.exists():
+            with open(summary_path) as f:
+                summaries[model_name] = json.load(f)
+            xai[model_name]["test_acc"] = summaries[model_name].get("test_acc", None)
+
+        # Load saved test data for this model
+        pkl_path = xai_root / "data" / f"test_data_{model_name}.pkl"
+        if pkl_path.exists():
+            with open(pkl_path, "rb") as f:
+                test_data[model_name] = pickle.load(f)
+
+    return test_data, xai, summaries
 
 
 def load_model(model_name: str, results_dir: str,
                channels: int, feature_dim: int, num_classes: int = 4):
-    """Reconstruct and load a trained model from checkpoint."""
-    ckpt_path = Path(results_dir) / "checkpoints" / model_name / "best_model.pth"
+    """Reconstruct and load a trained model from LibEER checkpoint."""
+    # LibEER saves checkpoints as 'checkpoint-best<metric>'
+    ckpt_path = Path(results_dir) / "checkpoints" / model_name / "checkpoint-bestmacro-f1"
     if not ckpt_path.exists():
         raise FileNotFoundError(f"Checkpoint not found: {ckpt_path}")
 
@@ -140,7 +160,9 @@ def load_model(model_name: str, results_dir: str,
         raise ValueError(f"Unknown model: {model_name}")
 
     ckpt = torch.load(ckpt_path, map_location=DEVICE)
-    m.load_state_dict(ckpt["model_state"])
+    # LibEER save_state() stores weights under key 'model'
+    state_dict = ckpt.get("model", ckpt.get("model_state", ckpt))
+    m.load_state_dict(state_dict)
     m.eval().to(DEVICE)
     return m
 
@@ -443,32 +465,29 @@ def main():
 
     # ── Load results ────────────────────────────────────────────────────────
     print("\nLoading results ...")
-    de_data, raw_data, all_xai, accuracy, ranking = load_results(args.results_dir)
+    test_data, all_xai, summaries = load_results(args.results_dir)
 
-    X_te_de  = de_data["X"]
-    y_te_de  = de_data["y"] if de_data["y"].ndim == 1 else np.argmax(de_data["y"], axis=1)
-    X_te_raw = raw_data["X"]
-    y_te_raw = raw_data["y"] if raw_data["y"].ndim == 1 else np.argmax(raw_data["y"], axis=1)
-
-    # Normalise (must match training normalisation)
-    X_te_de  = (X_te_de  - X_te_de.mean()) / (X_te_de.std()  + 1e-8)
-    X_te_raw = (X_te_raw - X_te_raw.mean()) / (X_te_raw.std() + 1e-8)
-
-    # Reshape raw data per model (same as Kaggle pipeline)
+    # Helper: get (X, y) for a model — NO normalization (LibEER trains without it)
     def get_X_for_model(model_name):
-        if model_name in MODELS_DE:
-            return X_te_de, y_te_de
-        elif model_name == "acrnn":
-            return np.transpose(X_te_raw, (0, 2, 1))[:, np.newaxis, :, :], y_te_raw
-        else:
-            return X_te_raw[:, np.newaxis, :, :], y_te_raw
+        if model_name not in test_data:
+            return None, None
+        td  = test_data[model_name]
+        X   = td["X"].astype(np.float32)
+        y   = td["y"]
+        y   = y if y.ndim == 1 else np.argmax(y, axis=1)
+        # ACRNN needs (N,1,T,C) — saved as (N,C,T) → transpose + expand
+        if model_name == "acrnn":
+            X = np.transpose(X, (0, 2, 1))[:, np.newaxis, :, :]
+        return X, y
 
     # ── Print accuracy table ────────────────────────────────────────────────
     print("\n" + "="*50)
-    print(f"{'Model':<12} {'Val Acc':>9} {'Test Acc':>10}")
+    print(f"{'Model':<12} {'Test Acc':>10}")
     print("-"*50)
-    for entry in ranking:
-        print(f"  #{entry['rank']}  {entry['model']:<10} {entry['val_acc']:>8.4f}  {entry['test_acc']:>9.4f}")
+    for model_name in ALL_MODELS:
+        if model_name in summaries:
+            acc = summaries[model_name].get("test_acc", float("nan"))
+            print(f"  {model_name:<12} {acc:>9.4f}")
     print("="*50)
 
     # ── Generate per-model figures ──────────────────────────────────────────
@@ -508,8 +527,15 @@ def main():
         X_m, y_m = get_X_for_model(model_name)
 
         # Load model
-        ch  = 62
-        fd  = 5 if model_name in MODELS_DE else X_m.shape[-1]  # 5 bands or 200 timepoints
+        ch = 62
+        # ACRNN input after ACRNN transform: (N, 1, T, C) → shape[-1]=C=62, shape[2]=T
+        # EEGNet/TSception: (N, C, T) → shape[-1]=T  |  DE: (N, 62, 5) → shape[-1]=5
+        if model_name in MODELS_DE:
+            fd = 5
+        elif model_name == "acrnn":
+            fd = X_m.shape[2]   # timepoints dimension after (N,1,T,C) reshape
+        else:
+            fd = X_m.shape[-1]  # 200 timepoints for EEGNet/TSception
         try:
             model = load_model(model_name, args.results_dir, ch, fd, num_classes=4)
         except FileNotFoundError as e:

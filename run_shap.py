@@ -121,7 +121,7 @@ def load_test_data(model_name: str, dataset_path: str, seed: int):
         feature_type="de_lds" if "de_lds" in cfg["dataset"] else "raw",
         only_seg=cfg["only_seg"],
         experiment_mode="subject-independent",
-        normalize=False,      # we normalise manually below
+        normalize=False,      # LibEER ignores this; data is returned unnormalized
         save_data=False,
         split_type="train-val-test-subject-wise",
         sessions=[1, 2, 3],
@@ -149,14 +149,11 @@ def load_test_data(model_name: str, dataset_path: str, seed: int):
         data_i, label_i, train_idx, test_idx, val_idx
     )
 
-    # Normalise (z-score per sample, same as training)
+    # No normalization — LibEER does NOT normalize data during training
+    # (setting.normalize is accepted but ignored by get_data/split).
+    # Applying normalization here would cause a train/eval input mismatch.
     X_test = np.array(X_test, dtype=np.float32)
     y_test = np.array(y_test)
-
-    # Normalise per sample across all features
-    mean = X_test.mean(axis=tuple(range(1, X_test.ndim)), keepdims=True)
-    std  = X_test.std( axis=tuple(range(1, X_test.ndim)), keepdims=True) + 1e-8
-    X_test = (X_test - mean) / std
 
     # Convert one-hot labels to integer class indices
     if y_test.ndim == 2:
