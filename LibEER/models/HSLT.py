@@ -109,6 +109,7 @@ class HSLT(nn.Module):
         data = data[:,new_indices]
         return data
     def forward(self, inputs):
+        inputs = self.transfer(inputs)
 
         transformer_outputs = []
         curr = 0
