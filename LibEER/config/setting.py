@@ -291,6 +291,28 @@ def seediv_sub_independent_train_val_test_setting(args):
                    sessions=[1] if args.sessions is None else args.sessions,
                    pr=args.pr, sr=args.sr, onehot=args.onehot, label_used=args.label_used)
 
+def seediv_sub_wise_setting(args):
+    """
+    SEED-IV subject-wise 70/15/15 split for XAI research.
+    Splits at the SUBJECT level (not sample level):
+      - 10 subjects for training   (~67%)
+      -  2 subjects for validation (~13%)
+      -  3 subjects for testing    (~20%)
+    All sessions used (1, 2, 3). Deterministic with fixed seed.
+    """
+    if not args.dataset.startswith('seediv'):
+        print('not using SEED IV dataset, please check your setting')
+        exit(1)
+    print("Using SEED-IV subject-wise split (10 train / 2 val / 3 test subjects), "
+          "all 3 sessions, experiment mode: subject-independent")
+    return Setting(dataset=args.dataset, dataset_path=args.dataset_path, pass_band=[args.low_pass, args.high_pass],
+                   extract_bands=None, time_window=args.time_window, overlap=args.overlap,
+                   sample_length=args.sample_length, stride=args.stride, seed=args.seed, feature_type=args.feature_type,
+                   only_seg=args.only_seg, experiment_mode="subject-independent", normalize=args.normalize,
+                   split_type='train-val-test-subject-wise',
+                   sessions=[1, 2, 3] if args.sessions is None else args.sessions,
+                   pr=args.pr, sr=args.sr, onehot=args.onehot, label_used=args.label_used)
+
 def deap_sub_independent_train_val_test_setting(args):
     if not args.dataset.startswith('deap'):
         print('not using deap dataset, please check your setting')
@@ -397,6 +419,7 @@ preset_setting = {
     "seediv_sub_dependent_train_val_test_setting": seediv_sub_dependent_train_val_test_setting,
     "seed_sub_independent_train_val_test_setting": seed_sub_independent_train_val_test_setting,
     "seediv_sub_independent_train_val_test_setting": seediv_sub_independent_train_val_test_setting,
+    "seediv_sub_wise_setting": seediv_sub_wise_setting,
     "seedv_sub_dependent_train_val_test_mean_setting":seedv_sub_dependent_train_val_test_mean_setting,
     "seedv_sub_independent_train_val_test_setting":seedv_sub_independent_train_val_test_setting,
     "deap_sub_dependent_train_val_test_setting" : deap_sub_dependent_train_val_test_setting,
