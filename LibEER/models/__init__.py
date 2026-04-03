@@ -1,5 +1,8 @@
 from models.DGCNN import DGCNN
-from models.RGNN_official import SymSimGCNNet as RGNN
+try:
+    from models.RGNN_official import SymSimGCNNet as RGNN
+except ModuleNotFoundError:
+    RGNN = None   # torch_geometric not installed — RGNN unavailable
 from models.EEGNet import EEGNet
 from models.STRNN import STRNN
 from models.GCBNet import GCBNet

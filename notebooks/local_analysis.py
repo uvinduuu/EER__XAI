@@ -49,8 +49,8 @@ for p in [str(LIBEER_SRC), str(REPO_ROOT), str(EVAL_SRC)]:
         sys.path.insert(0, p)
 
 from EvaluationMetrics.pytorch_eval import XAIEvaluator   # noqa: E402
-from models.Models import Model                             # noqa: E402
-from data_utils.preprocess import normalize                 # noqa: E402
+# Model and normalize are imported lazily in load_model() to avoid pulling
+# in RGNN_official which requires torch_geometric (not needed for figures).
 
 # ── Constants ────────────────────────────────────────────────────────────────
 EMOTION_LABELS   = {0: "neutral", 1: "sad", 2: "fear", 3: "happy"}
@@ -141,6 +141,8 @@ def load_results(results_dir: str):
 def load_model(model_name: str, results_dir: str,
                channels: int, feature_dim: int, num_classes: int = 4):
     """Reconstruct and load a trained model from LibEER checkpoint."""
+    from models.Models import Model  # lazy import — avoids torch_geometric at module level
+
     # LibEER saves checkpoints as 'checkpoint-best<metric>'
     ckpt_path = Path(results_dir) / "checkpoints" / model_name / "checkpoint-bestmacro-f1"
     if not ckpt_path.exists():
@@ -330,7 +332,7 @@ def plot_region_comparison(all_xai: dict, output_dir: str):
 
     x    = np.arange(n_regions)
     w    = 0.8 / n_models
-    cmap = plt.cm.get_cmap("tab10", n_models)
+    cmap = plt.colormaps["tab10"].resampled(n_models)
 
     fig, ax = plt.subplots(figsize=(16, 5))
     for mi, model_name in enumerate(model_list):
@@ -410,7 +412,7 @@ def plot_eval_metrics(eval_results: dict, output_dir: str, k: int = 10):
     n_m    = len(metrics_to_plot)
     x      = np.arange(len(model_list))
     w      = 0.8 / n_m
-    cmap   = plt.cm.get_cmap("Set2", n_m)
+    cmap   = plt.colormaps["Set2"].resampled(n_m)
 
     fig, ax = plt.subplots(figsize=(12, 5))
     for mi, (metric_name, fn) in enumerate(metrics_to_plot.items()):
@@ -450,7 +452,13 @@ def parse_args():
     p.add_argument("--k", type=int, default=10,
                    help="Top-k electrodes to use in fidelity evaluation")
     p.add_argument("--n_eval_samples", type=int, default=150,
-                   help="Number of test samples to use for sensitivity/consistency")
+                   help="Number of test samples for fidelity (comprehensiveness/sufficiency)")
+    p.add_argument("--n_sensitivity_samples", type=int, default=20,
+                   help="Samples for sensitivity test (each runs n_perturbations SHAP calls)")
+    p.add_argument("--n_perturbations", type=int, default=5,
+                   help="Gaussian perturbations per sample for sensitivity")
+    p.add_argument("--n_consistency_samples", type=int, default=10,
+                   help="Same-class pairs per emotion for consistency Spearman test")
     p.add_argument("--skip_eval", action="store_true",
                    help="Skip slow evaluation metrics, only generate figures")
     return p.parse_args()
@@ -562,7 +570,10 @@ def main():
 
         evaluator    = XAIEvaluator(model, DEVICE, model_name)
         eval_results[model_name] = evaluator.evaluate_all(
-            X_sub, y_sub, elec_imp_mean, shap_fn, k_values=[5, 10, 15, 20]
+            X_sub, y_sub, elec_imp_mean, shap_fn, k_values=[5, 10, 15, 20],
+            n_sensitivity_samples=args.n_sensitivity_samples,
+            n_perturbations=args.n_perturbations,
+            n_consistency_samples=args.n_consistency_samples,
         )
 
     # Save evaluation results

@@ -2,7 +2,7 @@
   "model": "hslt",
   "checkpoint": "/kaggle/working/results/HSLT/seediv_sub_wise_setting/checkpoint-bestmacro-f1",
   "seed": 2024,
-  "test_acc": 0.28755821689953426,
+  "test_acc": 0.3298735861610113,
   "n_explained": 300,
   "n_bg": 100,
   "device": "cuda",

@@ -350,7 +350,10 @@ class XAIEvaluator:
     def evaluate_all(self, X: np.ndarray, y: np.ndarray,
                      electrode_importance: np.ndarray,
                      shap_fn,
-                     k_values: list = (5, 10, 15, 20)) -> dict:
+                     k_values: list = (5, 10, 15, 20),
+                     n_sensitivity_samples: int = 20,
+                     n_perturbations: int = 5,
+                     n_consistency_samples: int = 10) -> dict:
         """
         Run the complete evaluation suite.
 
@@ -374,7 +377,10 @@ class XAIEvaluator:
         }
 
         results["fidelity"]    = self.fidelity(X, y, electrode_importance, k_values)
-        results["sensitivity"] = self.sensitivity(X, shap_fn)
-        results["consistency"] = self.consistency(X, y, shap_fn)
+        results["sensitivity"] = self.sensitivity(X, shap_fn,
+                                                   n_samples=n_sensitivity_samples,
+                                                   n_perturbations=n_perturbations)
+        results["consistency"] = self.consistency(X, y, shap_fn,
+                                                   n_samples=n_consistency_samples)
 
         return results

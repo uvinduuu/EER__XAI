@@ -1,0 +1,82 @@
+{
+  "dgcnn": {
+    "model": "dgcnn",
+    "n_test": 150,
+    "fidelity": {
+      "5": {
+        "comprehensiveness": 0.013333333333333308,
+        "sufficiency": 0.31333333333333335,
+        "fidelity": 0.16333333333333333
+      },
+      "10": {
+        "comprehensiveness": 0.20666666666666667,
+        "sufficiency": 0.28,
+        "fidelity": 0.24333333333333335
+      },
+      "15": {
+        "comprehensiveness": 0.20666666666666667,
+        "sufficiency": 0.35333333333333333,
+        "fidelity": 0.28
+      },
+      "20": {
+        "comprehensiveness": 0.17333333333333334,
+        "sufficiency": 0.37333333333333335,
+        "fidelity": 0.2733333333333333
+      }
+    },
+    "sensitivity": {
+      "mean_absolute_deviation": 0.01012264410439775,
+      "cosine_similarity": 0.9921447866043361,
+      "std_deviation": 0.003739303325589575
+    },
+    "consistency": {
+      "mean_spearman": 0.6738309284581099,
+      "per_class": {
+        "neutral": 0.6972879051144519,
+        "sad": 0.6524640527813452,
+        "fear": 0.7350671098688021,
+        "happy": 0.6105046460678402
+      }
+    }
+  },
+  "hslt": {
+    "model": "hslt",
+    "n_test": 150,
+    "fidelity": {
+      "5": {
+        "comprehensiveness": 0.026666666666666672,
+        "sufficiency": 0.18666666666666668,
+        "fidelity": 0.10666666666666667
+      },
+      "10": {
+        "comprehensiveness": 0.15333333333333335,
+        "sufficiency": 0.2,
+        "fidelity": 0.1766666666666667
+      },
+      "15": {
+        "comprehensiveness": 0.15333333333333335,
+        "sufficiency": 0.29333333333333333,
+        "fidelity": 0.22333333333333333
+      },
+      "20": {
+        "comprehensiveness": 0.15333333333333335,
+        "sufficiency": 0.3466666666666667,
+        "fidelity": 0.25
+      }
+    },
+    "sensitivity": {
+      "mean_absolute_deviation": 0.03809098428748569,
+      "cosine_similarity": 0.9864344570623362,
+      "std_deviation": 0.02911903458075754
+    },
+    "consistency": {
+      "mean_spearman": 0.9415967867845183,
+      "per_class": {
+        "neutral": 0.9399158923220265,
+        "sad": 0.9369192415199818,
+        "fear": 0.9487673440608395,
+        "happy": 0.9407846692352245
+      }
+    }
+  }
+}

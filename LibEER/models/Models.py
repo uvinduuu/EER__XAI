@@ -2,7 +2,10 @@ from models.CoralDgcnn import CoralDgcnn
 from models.DGCNN import DGCNN
 from models.DannDgcnn import DannDgcnn
 # from models.RGNN import RGNN
-from models.RGNN_official import SymSimGCNNet
+try:
+    from models.RGNN_official import SymSimGCNNet
+except ModuleNotFoundError:
+    SymSimGCNNet = None   # torch_geometric not installed
 from models.EEGNet import EEGNet
 from models.STRNN import STRNN
 from models.GCBNet import GCBNet
@@ -16,7 +19,10 @@ from models.GCBNet_BLS import GCBNet_BLS
 from models.MsMda import MSMDA
 from models.R2GSTNN import R2GSTNN
 from models.BiDANN import BiDANN
-from models.FBSTCNet import PowerAndConneMixedNet
+try:
+    from models.FBSTCNet import PowerAndConneMixedNet
+except ModuleNotFoundError:
+    PowerAndConneMixedNet = None   # torchaudio not installed
 from models.PRRL import PRRL
 from models.NSAL_DGAT import Domain_adaption_model
 

@@ -2,7 +2,7 @@
   "model": "dgcnn",
   "checkpoint": "/kaggle/working/results/DGCNN/seediv_sub_wise_setting/checkpoint-bestmacro-f1",
   "seed": 2024,
-  "test_acc": 0.24550898203592814,
+  "test_acc": 0.42035928143712575,
   "n_explained": 300,
   "n_bg": 100,
   "device": "cuda",
