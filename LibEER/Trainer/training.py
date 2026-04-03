@@ -5,7 +5,7 @@ from tqdm import tqdm
 from utils.metric import Metric
 from utils.store import save_state
 
-def train(model, dataset_train, dataset_val, dataset_test, device, output_dir="result/", metrics=None, metric_choose=None, optimizer=None, scheduler=None, batch_size=16, epochs=40, criterion=None, loss_func=None, loss_param=None):
+def train(model, dataset_train, dataset_val, dataset_test, device, output_dir="result/", metrics=None, metric_choose=None, optimizer=None, scheduler=None, batch_size=16, epochs=40, criterion=None, loss_func=None, loss_param=None, test_sub_label=None):
     if metrics is None:
         metrics = ['acc']
     if metric_choose is None:
