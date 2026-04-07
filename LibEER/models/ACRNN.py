@@ -213,16 +213,14 @@ class ACRNN(nn.Module): #  model = Model[args.model](args.sample_length, channel
         self.self_attention = self_attention(self.hidden_dim,self.hidden)
         self.num_labels = num_classes
         self.dropout = nn.Dropout(0.5)
-        self.softmax = nn.Sequential(
-            nn.Linear(self.hidden_dim,self.num_labels),
-            nn.Softmax(dim=1)
-        )
+        self.classifier = nn.Linear(self.hidden_dim, self.num_labels)
+
     def forward(self,x):
         x_map, x_ca = self.channel_wise_attention(x)
         x_cn = self.cnn(x_ca)
         x_rn, x_c = self.lstm(x_cn)
         x_sa = self.dropout(self.self_attention(x_rn))
-        x_sm = self.softmax(x_sa)
+        x_sm = self.classifier(x_sa)  # raw logits — CrossEntropyLoss applies softmax internally
         return x_sm
 
 
